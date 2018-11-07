@@ -1,0 +1,6 @@
+numpy==1.15.1
+tensorflow==1.4.1
+Keras==2.2.2
+nltk==3.3
+scikit_learn==0.20.0
+spacy==2.0.16

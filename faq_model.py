@@ -2,13 +2,13 @@ import argparse
 import tensorflow as tf
 from sklearn.utils import resample
 
-from models.pairwise_model import FixedAttendNeuralScoreRanker, NoAttendNeuralScoreRanker
+from models.pairwise_model import FixedAttendNeuralScoreRanker, NoAttendNeuralScoreRanker, RelationRanker
 from utils import Timer
 from dataset import Dataset, get_trimmed_embeddings
 from constants import DATA
 
 
-class NtuModel(FixedAttendNeuralScoreRanker):
+class NtuModel(RelationRanker):
     def __init__(self, model_name, embeddings, num_chars, batch_size=64, early_stopping=False, k_neg=50):
         super().__init__(model_name, embeddings, num_chars, batch_size, early_stopping, k_neg)
 

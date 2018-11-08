@@ -222,3 +222,33 @@ class FixedAttendNeuralScoreRanker(PairwiseModel, FixAttention, NeuralScore):
         with tf.variable_scope("scoring_function"), tf.device("/gpu:1"):
             self.n_score = self.score("neg")
             self.p_score = self.score("pos")
+
+
+class RelationRanker(PairwiseModel, RelationScore):
+    def __init__(self, model_name, embeddings, num_chars, batch_size, early_stopping, k_neg):
+        RelationScore.__init__(self)
+        PairwiseModel.__init__(self, model_name, embeddings, num_chars, batch_size, early_stopping, k_neg)
+
+    def _add_model_op(self):
+        RelationScore._add_model_op(self)
+        PairwiseModel._add_model_op(self)
+
+        with tf.variable_scope("question_embeddings"), tf.device("/gpu:0"):
+            q_char_output = self.embed_char(self.q_char_ids, self.q_word_lengths)
+            self.q_embeddings, _ = self.contextual_lstm(self.q_word_embeddings, q_char_output, self.q_sequence_lengths)
+
+        with tf.variable_scope("neg_context_embeddings"), tf.device("/gpu:1"):
+            cn_char_output = self.embed_char(self.cn_char_ids, self.cn_word_lengths)
+
+            self.cn_embeddings, _ = self.contextual_lstm(self.cn_word_embeddings, cn_char_output,
+                                                         self.cn_sequence_lengths)
+
+        with tf.variable_scope("pos_context_embeddings"), tf.device("/gpu:0"):
+            cp_char_output = self.embed_char(self.cp_char_ids, self.cp_word_lengths)
+
+            self.cp_embeddings, _ = self.contextual_lstm(self.cp_word_embeddings, cp_char_output,
+                                                         self.cp_sequence_lengths)
+
+        with tf.variable_scope("scoring_function"), tf.device("/gpu:1"):
+            self.n_score = self.score("neg")
+            self.p_score = self.score("pos")

@@ -98,7 +98,7 @@ def main(model_name, dataset):
             break
         a, qs = inference.get_answer(q)
         print(a)
-        print("\nRelated questions:")
+        print("\nRelated question:")
         for i in qs:
             print("- {}".format(i))
 

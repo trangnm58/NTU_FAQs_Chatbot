@@ -217,3 +217,61 @@ class NeuralScore:
         s = tf.nn.xw_plus_b(s, self.s_W2, self.s_b2)
         s = tf.reshape(s, shape=[-1])
         return s
+
+
+class RelationScore:
+    def __init__(self):
+        self.lstm_units = PARAMS['lstm_units']
+        self.relation_W1_size = PARAMS['relation_W1']
+        self.relation_W2_size = PARAMS['relation_W2']
+
+        # Required Tensors and Ops
+        self.q_embeddings = None
+        self.cn_embeddings = None
+        self.cp_embeddings = None
+        self.keep_op = None
+
+    def _add_model_op(self):
+        self.r_W1 = tf.get_variable(name="relation_W1", dtype=tf.float32,
+                                    shape=[self.lstm_units * 4, self.relation_W1_size],
+                                    initializer=tf.contrib.layers.xavier_initializer())
+        self.r_b1 = tf.get_variable(name="relation_b1", dtype=tf.float32,
+                                    shape=[self.relation_W1_size], initializer=tf.zeros_initializer())
+        self.r_W2 = tf.get_variable(name="relation_W2", dtype=tf.float32,
+                                    shape=[self.relation_W1_size, self.relation_W2_size],
+                                    initializer=tf.contrib.layers.xavier_initializer())
+        self.r_b2 = tf.get_variable(name="relation_b2", dtype=tf.float32,
+                                    shape=[self.relation_W2_size], initializer=tf.zeros_initializer())
+        self.r_W3 = tf.get_variable(name="relation_W3", dtype=tf.float32,
+                                    shape=[self.relation_W2_size, 1],
+                                    initializer=tf.contrib.layers.xavier_initializer())
+        self.r_b3 = tf.get_variable(name="relation_b3", dtype=tf.float32,
+                                    shape=[1], initializer=tf.zeros_initializer())
+
+    def score(self, branch):
+        if branch == "neg":
+            c_embeddings = self.cn_embeddings
+        else:
+            c_embeddings = self.cp_embeddings
+
+        q_seq_len = tf.shape(self.q_embeddings)[1]
+        c_seq_len = tf.shape(c_embeddings)[1]
+        question_embeddings = tf.tile(self.q_embeddings, [1, 1, c_seq_len])
+        question_embeddings = tf.reshape(question_embeddings, shape=[-1, q_seq_len, c_seq_len, self.lstm_units * 2])
+
+        context_embeddings = tf.tile(c_embeddings, [1, q_seq_len, 1])
+        context_embeddings = tf.reshape(context_embeddings, shape=[-1, q_seq_len, c_seq_len, self.lstm_units * 2])
+
+        combined_embeddings = tf.concat([question_embeddings, context_embeddings], axis=-1)
+        combined_embeddings = tf.reshape(combined_embeddings, shape=[-1, self.lstm_units * 4])
+
+        r = tf.nn.relu(tf.nn.xw_plus_b(combined_embeddings, self.r_W1, self.r_b1))
+        r = tf.nn.dropout(r, self.keep_op)
+        r = tf.nn.relu(tf.nn.xw_plus_b(r, self.r_W2, self.r_b2))
+
+        r = tf.reshape(r, shape=[-1, q_seq_len * c_seq_len, self.relation_W2_size])
+        r = tf.reduce_sum(r, axis=1, keep_dims=False)
+
+        r = tf.nn.xw_plus_b(r, self.r_W3, self.r_b3)
+        r = tf.reshape(r, shape=[-1])
+        return r

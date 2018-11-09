@@ -71,16 +71,18 @@ class Inference:
 
     def _arg_closest_related_questions(self, question, related_questions):
         all_question = [question] + related_questions
-        _, q_word_ids = zip(*[zip(*zip(*x)) for x in all_question])
+        q_char_ids, q_word_ids = zip(*[zip(*zip(*x)) for x in all_question])
 
         padded_q_word_ids, q_sequence_lengths = pad_sequences(q_word_ids, pad_tok=0)
+        padded_q_char_ids, q_word_lengths = pad_sequences(q_char_ids, pad_tok=0, nlevels=2)
 
         feed_dict = {self.model.q_word_ids: padded_q_word_ids,
+                     self.model.q_char_ids: padded_q_char_ids,
                      self.model.q_sequence_lengths: q_sequence_lengths,
+                     self.model.q_word_lengths: q_word_lengths,
                      self.model.keep_op: 1.0,
                      self.model.is_training: False}
-        question_embeddings = self.model.sess.run(self.model.q_word_embeddings, feed_dict=feed_dict)
-        question_embeddings = np.mean(question_embeddings, axis=1)
+        question_embeddings = self.model.sess.run(self.model.q_dense, feed_dict=feed_dict)
         q = question_embeddings[0]  # 1, 300
         rq = question_embeddings[1:]
         scores = np.sum(np.square(rq - q), axis=-1)

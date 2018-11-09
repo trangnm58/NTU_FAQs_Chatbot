@@ -102,3 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+
+# Big files
+data/w2v_model/*
+train_dev_pairwise_compressed.pickle
+trained_models/*

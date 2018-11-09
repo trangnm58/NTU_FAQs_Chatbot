@@ -235,7 +235,8 @@ class RelationRanker(PairwiseModel, RelationScore):
 
         with tf.variable_scope("question_embeddings"), tf.device("/gpu:0"):
             q_char_output = self.embed_char(self.q_char_ids, self.q_word_lengths)
-            self.q_embeddings, _ = self.contextual_lstm(self.q_word_embeddings, q_char_output, self.q_sequence_lengths)
+            self.q_embeddings, self.q_dense = self.contextual_lstm(self.q_word_embeddings,
+                                                                   q_char_output, self.q_sequence_lengths)
 
         with tf.variable_scope("neg_context_embeddings"), tf.device("/gpu:1"):
             cn_char_output = self.embed_char(self.cn_char_ids, self.cn_word_lengths)

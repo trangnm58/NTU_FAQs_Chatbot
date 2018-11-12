@@ -1,17 +1,12 @@
-**NTU FAQs Chatbot (NFC)**
+**NTU Question Answering System (NQA)**
 ================
 
-NFC version 1.0 has 3 main purposes:
+NQA version 1.0 has 3 main purposes:
 - Running a functional chatbot that can answer FAQs about NTU
 - Training new models with new corpora as long as they follow the pre-defined format
 - Evaluating pre-trained models with a given test data set
 
 ----------
-
-Contacts
-------------
-
-If you have any questions or problems, please email **pagenguyen219@gmail.com**
 
 Installation
 ---------------
@@ -46,13 +41,13 @@ and spaCy model:
 Usage
 ---------
 
-#### **Running the NTU FAQs chatbot**
+#### **Running NTU Question Answering System**
 Command:
 
     python run_chatbot.py -h
     usage: run_chatbot.py [-h] model dataset
 
-    Run the NTU FAQs Chatbot with a pre-trained model and FAQs dataset
+    Run NTU Question Answering System with a pre-trained model and FAQs dataset
     
     positional arguments:
       model       the name of the model
@@ -66,7 +61,7 @@ Command:
 > - "model" is the direct child folder within the "trained_models/" folder
 > - "dataset" is the direct child folder within the "data/" folder 
 
-Example: Running Chatbot with the model trained on original FAQs dataset
+Example: Running the system with the model trained on original FAQs dataset
 
     python run_chatbot.py original_relation_neg100 original
 
@@ -166,3 +161,9 @@ Command:
 Example: Training new model on original FAQs dataset with early stopping option and sample 100 negative answers
 
     python faq_model.py original_relation_neg100 original train_dev_pairwise_compressed.pickle -es -e 5 -k 100
+
+
+Contacts
+------------
+
+If you have any questions or problems, please email **pagenguyen219@gmail.com**

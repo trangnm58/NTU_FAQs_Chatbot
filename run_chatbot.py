@@ -106,7 +106,7 @@ def main(model_name, dataset):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Run the NTU FAQs Chatbot with a pre-trained model and FAQs dataset')
+    parser = argparse.ArgumentParser(description='Run NTU Question Answering System with a pre-trained model and FAQs dataset')
     parser.add_argument('model', help="the name of the model")
     parser.add_argument('dataset', help="the name of the FAQs dataset (must be placed in data/ folder), e.g: original")
 

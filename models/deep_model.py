@@ -17,9 +17,11 @@ class DeepModel:
         self.data = None
         self.keep_prob = None
 
-        config = tf.ConfigProto()
-        config.allow_soft_placement = True
-        self.sess = tf.InteractiveSession(config=config)
+        self.graph = tf.Graph()
+        with self.graph.as_default():
+            config = tf.ConfigProto()
+            config.allow_soft_placement = True
+            self.sess = tf.Session(config=config)
 
     def _add_placeholders(self):
         pass
@@ -35,9 +37,10 @@ class DeepModel:
         timer = Timer()
         timer.start("Building model")
 
-        self._add_placeholders()
-        self._add_model_op()
-        self._add_train_op()
+        with self.graph.as_default():
+            self._add_placeholders()
+            self._add_model_op()
+            self._add_train_op()
 
         timer.stop()
 

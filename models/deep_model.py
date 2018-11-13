@@ -57,56 +57,57 @@ class DeepModel:
         if not os.path.exists(self.model_name):
             os.makedirs(self.model_name)
 
-        saver = tf.train.Saver(max_to_keep=1)
-        if is_continue:
-            saver.restore(self.sess, tf.train.latest_checkpoint(self.model_name))
-        else:
-            self.sess.run(tf.global_variables_initializer())
+        with self.graph.as_default():
+            saver = tf.train.Saver(max_to_keep=1)
+            if is_continue:
+                saver.restore(self.sess, tf.train.latest_checkpoint(self.model_name))
+            else:
+                self.sess.run(tf.global_variables_initializer())
 
-        best_acc = 0
-        nepoch_noimp = 0
-        t = Timer()
-        for e in range(epochs):
-            t.start("Epoch {}".format(e + 1))
+            best_acc = 0
+            nepoch_noimp = 0
+            t = Timer()
+            for e in range(epochs):
+                t.start("Epoch {}".format(e + 1))
 
-            total_train_loss = 0
-            c = 0
+                total_train_loss = 0
+                c = 0
 
-            t.start("Create training examples")
-            train_examples = self.data.create_train_examples(self)
-            print("Number of training examples in {}: {}".format(e + 1, len(train_examples)))
-            t.stop()
+                t.start("Create training examples")
+                train_examples = self.data.create_train_examples(self)
+                print("Number of training examples in {}: {}".format(e + 1, len(train_examples)))
+                t.stop()
 
-            num_batch_train = len(train_examples) // self.batch_size + 1
-            display_step = num_batch_train // 4
+                num_batch_train = len(train_examples) // self.batch_size + 1
+                display_step = num_batch_train // 4
 
-            for idx, batch in enumerate(self._next_batch(data=train_examples, num_batch=num_batch_train)):
-                feed_dict = self._make_feed_dict(batch, self.keep_prob, True)
-                _, train_loss = self.sess.run([self.train_op, self.loss_op], feed_dict=feed_dict)
-                total_train_loss += train_loss
-                c += 1
-                if idx % display_step == 0:
-                    print("Iter {} - Loss: {}".format(idx, total_train_loss / c))
+                for idx, batch in enumerate(self._next_batch(data=train_examples, num_batch=num_batch_train)):
+                    feed_dict = self._make_feed_dict(batch, self.keep_prob, True)
+                    _, train_loss = self.sess.run([self.train_op, self.loss_op], feed_dict=feed_dict)
+                    total_train_loss += train_loss
+                    c += 1
+                    if idx % display_step == 0:
+                        print("Iter {} - Loss: {}".format(idx, total_train_loss / c))
 
-            if self.early_stopping:
-                dev_acc = self._dev_acc()
-                print("Dev accuracy (top {}): {}".format(1, dev_acc))
-                if dev_acc > best_acc:
-                    saver.save(self.sess, self.model_name + "model")
-                    print('Saved the model at epoch {}'.format(e + 1))
-                    best_acc = dev_acc
-                    nepoch_noimp = 0
-                else:
-                    nepoch_noimp += 1
-                    print("Number of epochs with no improvement: {}".format(nepoch_noimp))
-                    if nepoch_noimp >= patience:
-                        break
-            t.stop()
-        if not self.early_stopping:
-            saver.save(self.sess, self.model_name + "model")
-            print('Saved the model')
+                if self.early_stopping:
+                    dev_acc = self._dev_acc()
+                    print("Dev accuracy (top {}): {}".format(1, dev_acc))
+                    if dev_acc > best_acc:
+                        saver.save(self.sess, self.model_name + "model")
+                        print('Saved the model at epoch {}'.format(e + 1))
+                        best_acc = dev_acc
+                        nepoch_noimp = 0
+                    else:
+                        nepoch_noimp += 1
+                        print("Number of epochs with no improvement: {}".format(nepoch_noimp))
+                        if nepoch_noimp >= patience:
+                            break
+                t.stop()
+            if not self.early_stopping:
+                saver.save(self.sess, self.model_name + "model")
+                print('Saved the model')
 
-        self.sess.close()
+            self.sess.close()
 
     def load_data(self, dataset):
         timer = Timer()

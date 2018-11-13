@@ -37,8 +37,9 @@ class Inference:
         model = NtuModel(model_name=self.model_name, embeddings=embeddings, num_chars=num_chars,
                          batch_size=32, early_stopping=False, k_neg=0)
         model.build()
-        saver = tf.train.Saver()
-        saver.restore(model.sess, tf.train.latest_checkpoint(self.model_name))
+        with model.graph.as_default():
+            saver = tf.train.Saver()
+            saver.restore(model.sess, tf.train.latest_checkpoint(self.model_name))
 
         return model
 
@@ -67,9 +68,9 @@ class Inference:
         related_question_examples = [self.data.process_sent(i[0]) for i in top_related_questions]
 
         q_closet = self._arg_closest_related_questions(question_example, related_question_examples)
-        return top_original_context[q_closet], top_related_questions[q_closet]
+        return [top_original_context[i] for i in q_closet], [top_related_questions[i] for i in q_closet]
 
-    def _arg_closest_related_questions(self, question, related_questions):
+    def _arg_closest_related_questions(self, question, related_questions, top_k=5):
         all_question = [question] + related_questions
         q_char_ids, q_word_ids = zip(*[zip(*zip(*x)) for x in all_question])
 
@@ -87,7 +88,7 @@ class Inference:
         rq = question_embeddings[1:]
         scores = np.sum(np.square(rq - q), axis=-1)
 
-        q_min = scores.argsort()[0]
+        q_min = scores.argsort()[:top_k]
         return q_min
 
 
@@ -98,11 +99,10 @@ def main(model_name, dataset):
         q = input("\nQuestion: ")
         if q == "x":
             break
-        a, qs = inference.get_answer(q)
-        print(a)
-        print("\nRelated question:")
-        for i in qs:
-            print("- {}".format(i))
+        answers, questions = inference.get_answer(q)
+        for i in range(len(answers)):
+            print("{}. {}".format(i+1, answers[i]))
+            print("-- Related question: {}".format(questions[i][0]))
 
 
 if __name__ == '__main__':

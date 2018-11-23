@@ -38,8 +38,9 @@ class NtuModel(RelationRanker):
         timer = Timer()
         timer.start("Evaluating on a given dataset")
 
-        saver = tf.train.Saver()
-        saver.restore(self.sess, tf.train.latest_checkpoint(self.model_name))
+        with self.graph.as_default():
+            saver = tf.train.Saver()
+            saver.restore(self.sess, tf.train.latest_checkpoint(self.model_name))
 
         count_true = [0] * len(top_k)
         count_total = 0

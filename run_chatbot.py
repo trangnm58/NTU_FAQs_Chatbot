@@ -102,7 +102,7 @@ def main(model_name, dataset):
         answers, questions = inference.get_answer(q)
         for i in range(len(answers)):
             print("{}. {}".format(i+1, answers[i]))
-            print("-- Related question: {}".format(questions[i][0]))
+            print("-- Original question: {}".format(questions[i][0]))
 
 
 if __name__ == '__main__':

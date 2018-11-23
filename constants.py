@@ -24,6 +24,3 @@ URL = '[URL]'
 DATA = "data/"
 TRAINED_MODELS = "trained_models/"
 CONVERTED_DATA = "converted_data.pickle"
-
-# Word embedding configuration
-WORD_EMBEDDING = "data/w2v_model/wikipedia-pubmed-and-PMC-w2v.bin"

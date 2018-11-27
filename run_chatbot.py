@@ -1,14 +1,12 @@
 import argparse
 import numpy as np
 import tensorflow as tf
+from nltk.stem.snowball import SnowballStemmer
 
 from faq_model import NtuModel
 from pre_process import PreProcess
 from dataset import Dataset, get_trimmed_embeddings, pad_sequences
 from constants import DATA, TRAINED_MODELS
-
-seed = 13
-np.random.seed(seed)
 
 
 class Inference:
@@ -18,6 +16,7 @@ class Inference:
 
         self.data = Dataset(self.dataset)
         self.data.tfidf_compressor.train()
+        self.stemmer = SnowballStemmer("english")
 
         self.model = self._load_model()
         self.pre_process = PreProcess()
@@ -45,12 +44,13 @@ class Inference:
 
     def get_answer(self, question):
         question_example = self.pre_process.process(question, remove_stop_words=False)
-        q_word_set = set(question_example)
+        q_word_set = set([self.stemmer.stem(t) for t in question_example])
         question_example = self.data.process_sent(" ".join(question_example))
 
         filtered_idx = []
         for i in range(len(self.train_c_word_set)):
-            if len(q_word_set.intersection(self.train_c_word_set[i])) > 0:
+            stemmed_train_c_word_set = set([self.stemmer.stem(t) for t in self.train_c_word_set[i]])
+            if len(q_word_set.intersection(stemmed_train_c_word_set)) > 0:
                 filtered_idx.append(i)
 
         context_examples = [self.data.process_sent(
@@ -70,7 +70,7 @@ class Inference:
         q_closet = self._arg_closest_related_questions(question_example, related_question_examples)
         return [top_original_context[i] for i in q_closet], [top_related_questions[i] for i in q_closet]
 
-    def _arg_closest_related_questions(self, question, related_questions, top_k=5):
+    def _arg_closest_related_questions(self, question, related_questions, top_k=3):
         all_question = [question] + related_questions
         q_char_ids, q_word_ids = zip(*[zip(*zip(*x)) for x in all_question])
 
